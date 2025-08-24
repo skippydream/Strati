@@ -1,5 +1,6 @@
 package com.skippydream.strati
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.content.Context
 import androidx.activity.ComponentActivity
@@ -144,6 +145,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("LocalContextConfigurationRead")
 @Composable
 fun StratiApp() {
     val navController = rememberNavController()

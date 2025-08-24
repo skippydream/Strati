@@ -47,37 +47,31 @@ android {
 }
 
 dependencies {
+    // BOM to manage all Compose library versions
+    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
+
+    // Core Android Libraries
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
     implementation("androidx.activity:activity-compose:1.9.0")
-    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
+
+    // Compose Libraries
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.navigation:navigation-compose:2.9.3")
+
+    // Debugging Libraries for Compose
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    // Core Android Libraries
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation("androidx.navigation:navigation-compose:2.9.3")
-    implementation("androidx.compose.material3:material3:1.3.2")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.9.0")
-    implementation("androidx.compose.ui:ui-tooling:1.9.0")
-    implementation("androidx.compose.foundation:foundation:1.9.0")
-    implementation("androidx.navigation:navigation-compose:2.9.3")
     // Testing Libraries
-    androidTestImplementation(libs.androidx.ui.test.junit4)  // UI tests for Compose
-    debugImplementation(libs.androidx.ui.tooling)  // Compose tooling for previews and inspection
-    debugImplementation(libs.androidx.ui.test.manifest)  // Needed for Compose UI tests
-
-    // Unit and Instrumentation Tests
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.8")
 }
+// Use the correct version number}
