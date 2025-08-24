@@ -1,3 +1,29 @@
 <resources>
     <string name="app_name">Strati</string>
+    <string name="topics_title">Seleziona un Topic</string>
+    <string name="instructions_title">Istruzioni</string>
+    <string name="instructions_text_1">Scegli un topic, poi uno strato. Ad ogni domanda rispondi in modo onesto. Non ci sono risposte giuste o sbagliate, solo la tua verità.</string>
+    <string name="instructions_text_2">Il timer di 30 secondi non è un limite di tempo, ma un tempo di riflessione minimo. Devi aspettare che il conto alla rovescia si azzeri prima di poter visualizzare la domanda successiva.</string>
+    <string name="footer_text">Sei arrivatə fino in fondo? Good job. Sviluppato a Torino.</string>
+    <string name="error_invalid_topic">Errore: Topic non valido</string>
+    <string name="error_invalid_layer">Errore: Strato non valido</string>
+    <string name="topic_name_default">Conoscersi Meglio</string>
+    <string name="topic_name_love">Sotto la Pelle</string>
+    <string name="topic_name_thc">Sognare a Occhi Aperti</string>
+    <string name="layer_name_default_1">Sconosciuti</string>
+    <string name="layer_name_default_2">Percezioni</string>
+    <string name="layer_name_default_3">Connessione</string>
+    <string name="layer_name_default_4">Vulnerabilità</string>
+    <string name="layer_name_love_1">L\'inizio</string>
+    <string name="layer_name_love_2">Il Cuore</string>
+    <string name="layer_name_love_3">Il Profondo</string>
+    <string name="layer_name_thc_1">La Salita</string>
+    <string name="layer_name_thc_2">La Botta</string>
+    <string name="layer_name_thc_3">Il Trip</string>
+    <string name="question_screen_back_button">Torna indietro</string>
+    <string name="layers_screen_back_button">Torna ai Topic</string>
+    <string name="question_prompt_not_started">Clicca su inizia quando sei prontə.</string>
+    <string name="button_start">Inizia</string>
+    <string name="button_next">Prossima domanda</string>
+    <string name="end_of_layer">Hai visto tutte le domande di questo strato!</string>
 </resources>

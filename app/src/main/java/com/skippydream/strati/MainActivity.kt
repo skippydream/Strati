@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,45 +36,48 @@ import kotlinx.coroutines.launch
 data class Question(val text: String)
 
 // Data class per rappresentare uno strato di domande
-data class Layer(val id: Int, val name: String, val resourceId: Int)
+data class Layer(val id: Int, val nameResId: Int, val resourceId: Int)
 
 // Data class per rappresentare un topic, che contiene più strati
-data class Topic(val id: String, val name: String, val icon: ImageVector, val layers: List<Layer>)
+data class Topic(val id: String, val nameResId: Int, val icon: ImageVector, val layers: List<Layer>)
 
 // Definiamo tutti i topic, i loro strati e i file di risorse corrispondenti
-val topics = listOf(
-    Topic(
-        id = "default",
-        name = "Conoscersi Meglio",
-        icon = Icons.Default.Diversity3,
-        layers = listOf(
-            Layer(1, "Sconosciuti", R.raw.default_1),
-            Layer(2, "Percezioni", R.raw.default_2),
-            Layer(3, "Connessione", R.raw.default_3),
-            Layer(4, "Vulnerabilità", R.raw.default_4)
-        )
-    ),
-    Topic(
-        id = "love",
-        name = "Sotto la Pelle",
-        icon = Icons.Default.LocalFireDepartment,
-        layers = listOf(
-            Layer(1, "L'inizio", R.raw.love_1),
-            Layer(2, "Il Cuore", R.raw.love_2),
-            Layer(3, "Il Profondo", R.raw.love_3)
-        )
-    ),
-    Topic(
-        id = "thc",
-        name = "Sognare a Occhi Aperti",
-        icon = Icons.Default.Star,
-        layers = listOf(
-            Layer(1, "La Fila", R.raw.thc_1),
-            Layer(2, "La Botta", R.raw.thc_2),
-            Layer(3, "Il Trip", R.raw.thc_3)
+@Composable
+fun getTopicsList(): List<Topic> {
+    return listOf(
+        Topic(
+            id = "default",
+            nameResId = R.string.topic_name_default,
+            icon = Icons.Default.Diversity3,
+            layers = listOf(
+                Layer(1, R.string.layer_name_default_1, R.raw.default_1),
+                Layer(2, R.string.layer_name_default_2, R.raw.default_2),
+                Layer(3, R.string.layer_name_default_3, R.raw.default_3),
+                Layer(4, R.string.layer_name_default_4, R.raw.default_4)
+            )
+        ),
+        Topic(
+            id = "love",
+            nameResId = R.string.topic_name_love,
+            icon = Icons.Default.LocalFireDepartment,
+            layers = listOf(
+                Layer(1, R.string.layer_name_love_1, R.raw.love_1),
+                Layer(2, R.string.layer_name_love_2, R.raw.love_2),
+                Layer(3, R.string.layer_name_love_3, R.raw.love_3)
+            )
+        ),
+        Topic(
+            id = "thc",
+            nameResId = R.string.topic_name_thc,
+            icon = Icons.Default.Star,
+            layers = listOf(
+                Layer(1, R.string.layer_name_thc_1, R.raw.thc_1),
+                Layer(2, R.string.layer_name_thc_2, R.raw.thc_2),
+                Layer(3, R.string.layer_name_thc_3, R.raw.thc_3)
+            )
         )
     )
-)
+}
 
 // Funzione per caricare le domande dal file raw
 private fun loadQuestionsFromRaw(context: Context, resourceId: Int): List<Question> {
@@ -127,7 +131,7 @@ fun StratiApp() {
             if (topicId != null) {
                 LayersScreen(topicId = topicId, navController = navController)
             } else {
-                Text(text = "Errore: Topic non valido")
+                Text(text = stringResource(R.string.error_invalid_topic))
             }
         }
         composable(Screen.Question.route) { backStackEntry ->
@@ -136,14 +140,14 @@ fun StratiApp() {
             if (topicId != null && layerId != null) {
                 QuestionScreen(topicId = topicId, layerId = layerId, navController = navController)
             } else {
-                Text(text = "Errore: Strato non valido")
+                Text(text = stringResource(R.string.error_invalid_layer))
             }
         }
     }
 }
-
 @Composable
 fun TopicsScreen(navController: NavController) {
+    val topics = getTopicsList()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -152,11 +156,13 @@ fun TopicsScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Seleziona un Topic",
+            text = stringResource(R.string.topics_title),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 24.dp)
         )
+        InstructionsCard()
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -168,30 +174,96 @@ fun TopicsScreen(navController: NavController) {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "      _\n     / \\\n    /   \\\n   /     \\\n  /_______\\\n /  _____  \\\n/  | | | |  \\\n/___|_|_|_|___\\",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.footer_text),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+    }
+}
+@Composable
+fun InstructionsCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.instructions_title),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.instructions_text_1),
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.instructions_text_2),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+        }
     }
 }
 
 @Composable
 fun TopicCard(topic: Topic, onClick: () -> Unit) {
-    Card(
+    ElevatedCard(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp),
-        onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = topic.icon,
-                contentDescription = topic.name,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onBackground
+                contentDescription = stringResource(topic.nameResId),
+                modifier = Modifier.size(36.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.width(24.dp))
+            Text(
+                text = stringResource(topic.nameResId),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }
@@ -199,9 +271,10 @@ fun TopicCard(topic: Topic, onClick: () -> Unit) {
 
 @Composable
 fun LayersScreen(topicId: String, navController: NavController) {
+    val topics = getTopicsList()
     val topic = topics.find { it.id == topicId }
     if (topic == null) {
-        Text("Errore: Topic non trovato")
+        Text(stringResource(R.string.error_invalid_topic))
         return
     }
 
@@ -213,7 +286,7 @@ fun LayersScreen(topicId: String, navController: NavController) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Topic: ${topic.name}",
+            text = "Topic: ${stringResource(topic.nameResId)}",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 24.dp)
@@ -231,7 +304,7 @@ fun LayersScreen(topicId: String, navController: NavController) {
         }
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedButton(onClick = { navController.popBackStack() }) {
-            Text(text = "Torna ai Topic")
+            Text(text = stringResource(R.string.layers_screen_back_button))
         }
     }
 }
@@ -243,9 +316,8 @@ fun LayerCard(layer: Layer, onClick: () -> Unit) {
             .fillMaxWidth()
             .height(100.dp),
         onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Column(
@@ -255,15 +327,15 @@ fun LayerCard(layer: Layer, onClick: () -> Unit) {
         ) {
             Text(
                 text = "Strato ${layer.id}",
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                text = layer.name,
-                fontSize = 16.sp,
+                text = stringResource(layer.nameResId),
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Light,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }
@@ -271,6 +343,7 @@ fun LayerCard(layer: Layer, onClick: () -> Unit) {
 
 @Composable
 fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) {
+    val topics = getTopicsList()
     val context = LocalContext.current
     val topic = topics.find { it.id == topicId }
     val layer = topic?.layers?.find { it.id == layerId }
@@ -291,7 +364,7 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
 
     LaunchedEffect(isTimerActive) {
         if (isTimerActive) {
-            for (i in 15 downTo 0) {
+            for (i in 30 downTo 0) {
                 timerValue = i
                 delay(1000)
             }
@@ -314,12 +387,12 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Topic: ${topic?.name ?: ""}",
+                text = "Topic: ${stringResource(topic?.nameResId ?: 0)}",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Strato ${layer?.id ?: ""} - ${layer?.name ?: ""}",
+                text = "Strato ${layer?.id ?: ""} - ${stringResource(layer?.nameResId ?: 0)}",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Light,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -341,7 +414,7 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                         CircularProgressIndicator()
                     } else if (!isStarted) {
                         Text(
-                            text = "Clicca su inizia quando sei prontə.",
+                            text = stringResource(R.string.question_prompt_not_started),
                             fontSize = 20.sp,
                             textAlign = TextAlign.Center
                         )
@@ -390,7 +463,7 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                                     currentQuestion = nextQuestion.text
                                     questionsShown = questionsShown + nextQuestion
                                 } else {
-                                    currentQuestion = "Hai visto tutte le domande di questo strato!"
+                                    currentQuestion = stringResource(R.string.end_of_layer)
                                     questionsShown = emptySet()
                                 }
                                 isLoading = false
@@ -400,9 +473,9 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                     enabled = questions.isNotEmpty() && !isLoading && !isTimerActive
                 ) {
                     if (!isStarted) {
-                        Text(text = "Inizia")
+                        Text(text = stringResource(R.string.button_start))
                     } else {
-                        Text(text = "Prossima domanda")
+                        Text(text = stringResource(R.string.button_next))
                     }
                 }
                 Box(modifier = Modifier.width(50.dp), contentAlignment = Alignment.Center) {
@@ -418,12 +491,11 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
             }
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(onClick = { navController.popBackStack() }) {
-                Text(text = "Torna indietro")
+                Text(text = stringResource(R.string.question_screen_back_button))
             }
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
