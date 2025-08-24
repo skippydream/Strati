@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">Strati</string>
-    <string name="topics_title">Seleziona un Topic</string>
+    <string name="layer_label">Strato</string>
     <string name="instructions_title">Istruzioni</string>
     <string name="instructions_text_1">Scegli un topic, poi uno strato. Ad ogni domanda rispondi in modo onesto. Non ci sono risposte giuste o sbagliate, solo la tua verità.</string>
     <string name="instructions_text_2">Il timer di 30 secondi non è un limite di tempo, ma un tempo di riflessione minimo. Devi aspettare che il conto alla rovescia si azzeri prima di poter visualizzare la domanda successiva.</string>
-    <string name="footer_text">Sei arrivatə fino in fondo? Good job. Sviluppato a Torino.</string>
+    <string name="footer_text">Gratis e Open Source. Sviluppata a Torino.</string>
+    <string name="donation_text">Offrimi un caffè ☕ su PayPal</string>
     <string name="error_invalid_topic">Errore: Topic non valido</string>
     <string name="error_invalid_layer">Errore: Strato non valido</string>
     <string name="topic_name_default">Conoscersi Meglio</string>
@@ -26,4 +27,8 @@
     <string name="button_start">Inizia</string>
     <string name="button_next">Prossima domanda</string>
     <string name="end_of_layer">Hai visto tutte le domande di questo strato!</string>
+    <string name="donate_title">Dona su PayPal ❤️</string>
+    <string name="donate_hide">Nascondi donazioni</string>
+    <string name="donate_text">Scegli un importo da donare:</string>
+
 </resources>

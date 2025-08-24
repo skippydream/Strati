@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Strati</string>
+    <string name="layer_label">Layer</string>
+    <string name="instructions_title">Instructions</string>
+    <string name="instructions_text_1">Choose a topic, then a layer. For each question, answer honestly. There are no right or wrong answers, just your truth.</string>
+    <string name="instructions_text_2">The 30-second timer is not a time limit, but a minimum reflection time. You have to wait for the countdown to hit zero before you can view the next question.</string>
+    <string name="footer_text">Free and Open Source. Made in Turin, Italy.</string>
+    <string name="donation_text">Offrimi un caffè ☕ su PayPal</string>
+    <string name="error_invalid_topic">Error: Invalid Topic</string>
+    <string name="error_invalid_layer">Error: Invalid Layer</string>
+    <string name="topic_name_default">Get to know each other</string>
+    <string name="topic_name_love">Under the Skin</string>
+    <string name="topic_name_thc">Daydreaming</string>
+    <string name="layer_name_default_1">Strangers</string>
+    <string name="layer_name_default_2">Perceptions</string>
+    <string name="layer_name_default_3">Connection</string>
+    <string name="layer_name_default_4">Vulnerability</string>
+    <string name="layer_name_love_1">The Beginning</string>
+    <string name="layer_name_love_2">The Heart</string>
+    <string name="layer_name_love_3">The Deep</string>
+    <string name="layer_name_thc_1">The Ascent</string>
+    <string name="layer_name_thc_2">The Hit</string>
+    <string name="layer_name_thc_3">The Trip</string>
+    <string name="question_screen_back_button">Go back</string>
+    <string name="layers_screen_back_button">Go back to Topics</string>
+    <string name="question_prompt_not_started">Click start when you are ready.</string>
+    <string name="button_start">Start</string>
+    <string name="button_next">Next question</string>
+    <string name="end_of_layer">You have seen all the questions for this layer!</string>
+    <string name="donate_title">Donate on PayPal ❤️</string>
+    <string name="donate_hide">Hide donations</string>
+    <string name="donate_text">Choose an amount to donate:</string>
+</resources>

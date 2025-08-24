@@ -31,18 +31,34 @@ import androidx.navigation.compose.rememberNavController
 import com.skippydream.strati.ui.theme.StratiTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Locale
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.foundation.clickable
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.runtime.Composable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalUriHandler
+
+
 
 // Data class per rappresentare una singola domanda
 data class Question(val text: String)
 
 // Data class per rappresentare uno strato di domande
-data class Layer(val id: Int, val nameResId: Int, val resourceId: Int)
+data class Layer(
+    val id: Int,
+    val nameResId: Int,
+    val resourceId: Int,
+    val resourceIdEn: Int? = null
+)
 
 // Data class per rappresentare un topic, che contiene più strati
 data class Topic(val id: String, val nameResId: Int, val icon: ImageVector, val layers: List<Layer>)
 
 // Definiamo tutti i topic, i loro strati e i file di risorse corrispondenti
-@Composable
 fun getTopicsList(): List<Topic> {
     return listOf(
         Topic(
@@ -50,10 +66,10 @@ fun getTopicsList(): List<Topic> {
             nameResId = R.string.topic_name_default,
             icon = Icons.Default.Diversity3,
             layers = listOf(
-                Layer(1, R.string.layer_name_default_1, R.raw.default_1),
-                Layer(2, R.string.layer_name_default_2, R.raw.default_2),
-                Layer(3, R.string.layer_name_default_3, R.raw.default_3),
-                Layer(4, R.string.layer_name_default_4, R.raw.default_4)
+                Layer(1, R.string.layer_name_default_1, R.raw.default_1, R.raw.default_1_en),
+                Layer(2, R.string.layer_name_default_2, R.raw.default_2, R.raw.default_2_en),
+                Layer(3, R.string.layer_name_default_3, R.raw.default_3, R.raw.default_3_en),
+                Layer(4, R.string.layer_name_default_4, R.raw.default_4, R.raw.default_4_en)
             )
         ),
         Topic(
@@ -61,9 +77,9 @@ fun getTopicsList(): List<Topic> {
             nameResId = R.string.topic_name_love,
             icon = Icons.Default.LocalFireDepartment,
             layers = listOf(
-                Layer(1, R.string.layer_name_love_1, R.raw.love_1),
-                Layer(2, R.string.layer_name_love_2, R.raw.love_2),
-                Layer(3, R.string.layer_name_love_3, R.raw.love_3)
+                Layer(1, R.string.layer_name_love_1, R.raw.love_1, R.raw.love_1_en),
+                Layer(2, R.string.layer_name_love_2, R.raw.love_2, R.raw.love_2_en),
+                Layer(3, R.string.layer_name_love_3, R.raw.love_3, R.raw.love_3_en)
             )
         ),
         Topic(
@@ -71,18 +87,27 @@ fun getTopicsList(): List<Topic> {
             nameResId = R.string.topic_name_thc,
             icon = Icons.Default.Star,
             layers = listOf(
-                Layer(1, R.string.layer_name_thc_1, R.raw.thc_1),
-                Layer(2, R.string.layer_name_thc_2, R.raw.thc_2),
-                Layer(3, R.string.layer_name_thc_3, R.raw.thc_3)
+                Layer(1, R.string.layer_name_thc_1, R.raw.thc_1, R.raw.thc_1_en),
+                Layer(2, R.string.layer_name_thc_2, R.raw.thc_2, R.raw.thc_2_en),
+                Layer(3, R.string.layer_name_thc_3, R.raw.thc_3, R.raw.thc_3_en)
             )
         )
     )
 }
 
 // Funzione per caricare le domande dal file raw
-private fun loadQuestionsFromRaw(context: Context, resourceId: Int): List<Question> {
+private fun loadQuestionsFromRaw(context: Context, layer: Layer): List<Question> {
+    val locale = context.resources.configuration.locales.get(0)
+    val isEnglish = locale.language.startsWith("en")
+
+    val resIdToLoad = if (isEnglish && layer.resourceIdEn != null) {
+        layer.resourceIdEn
+    } else {
+        layer.resourceId
+    }
+
     return try {
-        context.resources.openRawResource(resourceId)
+        context.resources.openRawResource(resIdToLoad)
             .bufferedReader()
             .useLines { lines ->
                 lines.map { line -> Question(line.trim()) }.toList()
@@ -122,72 +147,92 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun StratiApp() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.TopicsSelection.route) {
-        composable(Screen.TopicsSelection.route) {
-            TopicsScreen(navController = navController)
-        }
-        composable(Screen.LayersSelection.route) { backStackEntry ->
-            val topicId = backStackEntry.arguments?.getString("topicId")
-            if (topicId != null) {
-                LayersScreen(topicId = topicId, navController = navController)
-            } else {
-                Text(text = stringResource(R.string.error_invalid_topic))
+
+    var selectedLocale by remember { mutableStateOf(Locale.getDefault()) }
+
+    val context = LocalContext.current
+    val localizedContext = remember(selectedLocale) {
+        context.createConfigurationContext(
+            android.content.res.Configuration(context.resources.configuration).apply {
+                setLocale(selectedLocale)
             }
-        }
-        composable(Screen.Question.route) { backStackEntry ->
-            val topicId = backStackEntry.arguments?.getString("topicId")
-            val layerId = backStackEntry.arguments?.getString("layerId")?.toIntOrNull()
-            if (topicId != null && layerId != null) {
+        )
+    }
+
+    CompositionLocalProvider(LocalContext provides localizedContext) {
+        NavHost(navController = navController, startDestination = Screen.TopicsSelection.route) {
+            composable(Screen.TopicsSelection.route) {
+                TopicsScreen(
+                    navController = navController,
+                    selectedLocale = selectedLocale,
+                    onLocaleChange = { locale -> selectedLocale = locale }
+                )
+            }
+            composable(Screen.LayersSelection.route) { backStackEntry ->
+                val topicId = backStackEntry.arguments?.getString("topicId")
+                if (topicId != null) {
+                    LayersScreen(topicId = topicId, navController = navController)
+                } else {
+                    Text(text = stringResource(R.string.error_invalid_topic))
+                }
+            }
+            composable(Screen.Question.route) { backStackEntry ->
+                val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+                val layerId = backStackEntry.arguments?.getString("layerId")?.toIntOrNull() ?: 0
                 QuestionScreen(topicId = topicId, layerId = layerId, navController = navController)
-            } else {
-                Text(text = stringResource(R.string.error_invalid_layer))
             }
         }
+
     }
 }
+
 @Composable
-fun TopicsScreen(navController: NavController) {
+fun TopicsScreen(
+    navController: NavController,
+    selectedLocale: Locale,
+    onLocaleChange: (Locale) -> Unit
+) {
     val topics = getTopicsList()
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 24.dp), // top e bottom un po' più equilibrati
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top // meglio usare Top per scrollare correttamente
     ) {
-        Text(
-            text = stringResource(R.string.topics_title),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp)
+        // Pulsanti cambio lingua in alto a destra
+        LanguageSwitcher(
+            selectedLocale = selectedLocale,
+            onLocaleChange = onLocaleChange
         )
         InstructionsCard()
+
+
+        Spacer(modifier = Modifier.height(16.dp))  // separazione da lista
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.weight(1f)  // prende spazio disponibile
         ) {
             items(topics) { topic ->
                 TopicCard(topic = topic) {
                     navController.navigate(Screen.LayersSelection.createRoute(topic.id))
                 }
-            }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            }
+
+
+        }
+        DonationLinkButton() // aggiunta donation
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "      _\n     / \\\n    /   \\\n   /     \\\n  /_______\\\n /  _____  \\\n/  | | | |  \\\n/___|_|_|_|___\\",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.footer_text),
                 fontSize = 12.sp,
@@ -195,11 +240,32 @@ fun TopicsScreen(navController: NavController) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+            Text(
+                text = "GitHub",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val url = "https://www.github.com/skippydream/Strati"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                    }
+                    .padding(top = 4.dp)
+            )
         }
     }
 }
+
+
+
 @Composable
 fun InstructionsCard() {
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,28 +278,46 @@ fun InstructionsCard() {
             modifier = Modifier
                 .padding(16.dp)
         ) {
-            Text(
-                text = stringResource(R.string.instructions_title),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.instructions_text_1),
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.instructions_text_2),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
-            )
+            // Titolo cliccabile per espandere/chiudere
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.instructions_title),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+
+            if (expanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.instructions_text_1),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.instructions_text_2),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
         }
     }
 }
+
 
 @Composable
 fun TopicCard(topic: Topic, onClick: () -> Unit) {
@@ -326,7 +410,7 @@ fun LayerCard(layer: Layer, onClick: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Strato ${layer.id}",
+                text = stringResource(R.string.layer_label) + " ${layer.id}",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -356,12 +440,16 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
     var timerValue by remember { mutableIntStateOf(0) }
     var isTimerActive by remember { mutableStateOf(false) }
 
+    val endOfLayerMessage = stringResource(R.string.end_of_layer)
+
+    // Caricamento iniziale delle domande
     LaunchedEffect(key1 = topicId, key2 = layerId) {
         if (layer != null) {
-            questions = loadQuestionsFromRaw(context, layer.resourceId)
+            questions = loadQuestionsFromRaw(context, layer)
         }
     }
 
+    // Timer countdown
     LaunchedEffect(isTimerActive) {
         if (isTimerActive) {
             for (i in 30 downTo 0) {
@@ -372,18 +460,16 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
         }
     }
 
-    // Aggiunto un CoroutineScope per poter usare delay() nel Button onClick
     val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center // Allineiamo l'intero Box al centro
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -392,11 +478,13 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Strato ${layer?.id ?: ""} - ${stringResource(layer?.nameResId ?: 0)}",
+                text = stringResource(R.string.layer_label) + " ${layer?.id ?: ""} - ${stringResource(layer?.nameResId ?: 0)}",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Light,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            // Card contenente la domanda
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -410,16 +498,14 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator()
-                    } else if (!isStarted) {
-                        Text(
+                    when {
+                        isLoading -> CircularProgressIndicator()
+                        !isStarted -> Text(
                             text = stringResource(R.string.question_prompt_not_started),
                             fontSize = 20.sp,
                             textAlign = TextAlign.Center
                         )
-                    } else {
-                        Text(
+                        else -> Text(
                             text = currentQuestion,
                             fontSize = 20.sp,
                             textAlign = TextAlign.Center
@@ -427,15 +513,17 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                     }
                 }
             }
+
+            // Pulsante e timer
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp), // Aggiunto un padding per non far toccare i bordi
+                    .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.width(50.dp), contentAlignment = Alignment.Center) { // Box vuoto per allineare il pulsante
-                    // Il timer sarà qui, visibile solo quando attivo
+                // Timer sinistra (solo se attivo)
+                Box(modifier = Modifier.width(50.dp), contentAlignment = Alignment.Center) {
                     if (isTimerActive) {
                         Text(
                             text = "$timerValue",
@@ -444,42 +532,59 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                         )
                     }
                 }
+
+                // Bottone centrale
                 Button(
                     onClick = {
                         isLoading = true
-                        isTimerActive = true
                         coroutineScope.launch {
-                            if (!isStarted) {
-                                isStarted = true
-                                val initialQuestion = questions.random()
-                                currentQuestion = initialQuestion.text
-                                questionsShown = questionsShown + initialQuestion
-                                isLoading = false
-                            } else {
-                                delay(500) // Il ritardo richiesto è qui
-                                val remainingQuestions = questions.filter { it !in questionsShown }
-                                if (remainingQuestions.isNotEmpty()) {
-                                    val nextQuestion = remainingQuestions.random()
-                                    currentQuestion = nextQuestion.text
-                                    questionsShown = questionsShown + nextQuestion
+                            try {
+                                if (!isStarted) {
+                                    isStarted = true
+                                    isTimerActive = true  // Avvia il timer anche alla prima domanda
+                                    delay(1000) // opzionale, per sincronizzare
+                                    val initialQuestion = questions.randomOrNull()
+                                    if (initialQuestion != null) {
+                                        currentQuestion = initialQuestion.text
+                                        questionsShown = setOf(initialQuestion)
+                                    } else {
+                                        currentQuestion = endOfLayerMessage
+                                    }
                                 } else {
-                                    currentQuestion = stringResource(R.string.end_of_layer)
-                                    questionsShown = emptySet()
+                                    isTimerActive = true
+                                    delay(1000)
+
+                                    val remaining = questions.filter { it !in questionsShown }
+                                    if (remaining.isNotEmpty()) {
+                                        val next = remaining.random()
+                                        currentQuestion = next.text
+                                        questionsShown = questionsShown + next
+                                    } else {
+                                        currentQuestion = endOfLayerMessage
+                                        questionsShown = emptySet()
+                                    }
                                 }
+                            } finally {
                                 isLoading = false
                             }
                         }
                     },
-                    enabled = questions.isNotEmpty() && !isLoading && !isTimerActive
+                    enabled = questions.isNotEmpty() && !isLoading && !isTimerActive,
+                    modifier = Modifier
+                        .padding(vertical = 15.dp)
                 ) {
-                    if (!isStarted) {
-                        Text(text = stringResource(R.string.button_start))
-                    } else {
-                        Text(text = stringResource(R.string.button_next))
-                    }
+                    Text(
+                        text = if (!isStarted)
+                            stringResource(R.string.button_start)
+                        else
+                            stringResource(R.string.button_next),
+                        fontSize = 25.sp
+                    )
                 }
+
+
+                // Timer destra (invisibile per simmetria)
                 Box(modifier = Modifier.width(50.dp), contentAlignment = Alignment.Center) {
-                    // Spazio per il timer invisibile, per mantenere il pulsante centrato
                     if (isTimerActive) {
                         Text(
                             text = "$timerValue",
@@ -489,13 +594,117 @@ fun QuestionScreen(topicId: String, layerId: Int, navController: NavController) 
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedButton(onClick = { navController.popBackStack() }) {
                 Text(text = stringResource(R.string.question_screen_back_button))
             }
         }
     }
 }
+
+@Composable
+fun DonationLinkButton() {
+    var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (expanded) stringResource(R.string.donate_hide) else stringResource(R.string.donate_title),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = if (!expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (!expanded) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+
+            if (expanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.donate_text),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                listOf(2, 5, 10).forEach { amount ->
+                    OutlinedButton(
+                        onClick = {
+                            val url = "https://paypal.me/michelelana/$amount"
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onTertiaryContainer)
+                    ) {
+                        Text(text = "€$amount")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LanguageSwitcher(
+    selectedLocale: Locale,
+    onLocaleChange: (Locale) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp),
+        horizontalArrangement = Arrangement.End
+    ) {
+        val selectedColor = MaterialTheme.colorScheme.primary
+        val unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+
+        TextButton(onClick = { onLocaleChange(Locale("it")) }) {
+            Text(
+                text = "IT",
+                color = if (selectedLocale.language == "it") selectedColor else unselectedColor
+            )
+        }
+        TextButton(onClick = { onLocaleChange(Locale("en")) }) {
+            Text(
+                text = "EN",
+                color = if (selectedLocale.language == "en") selectedColor else unselectedColor
+            )
+        }
+    }
+}
+
+
+
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
