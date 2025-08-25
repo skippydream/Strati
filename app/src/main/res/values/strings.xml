@@ -25,10 +25,12 @@
     <string name="layers_screen_back_button">Torna ai Topic</string>
     <string name="question_prompt_not_started">Clicca su inizia quando sei prontə.</string>
     <string name="button_start">Inizia</string>
-    <string name="button_next">Prossima&#10;domanda</string>
+    <string name="button_next">Prossima</string>
     <string name="end_of_layer">Hai visto tutte le domande di questo strato!</string>
     <string name="donate_title">Dona su PayPal ❤️</string>
     <string name="donate_hide">Nascondi donazioni</string>
     <string name="donate_text">Scegli un importo da donare:</string>
+    <string name="submit_form">Suggerisci nuove domande</string>
+
 
 </resources>

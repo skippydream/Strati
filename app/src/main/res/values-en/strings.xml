@@ -30,4 +30,6 @@
     <string name="donate_title">Donate on PayPal ❤️</string>
     <string name="donate_hide">Hide donations</string>
     <string name="donate_text">Choose an amount to donate:</string>
+    <string name="submit_form">Suggest new questions</string>
+
 </resources>

@@ -44,7 +44,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalUriHandler
 
 
-
 // Data class per rappresentare una singola domanda
 data class Question(val text: String)
 
@@ -231,10 +230,56 @@ fun TopicsScreen(
         }
         DonationLinkButton() // aggiunta donation
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // GitHub con icona
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable {
+                    val url = "https://www.github.com/skippydream/Strati"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }
+            ) {
+                Text(
+                    text = "GitHub",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // Submit suggestion con icona
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable {
+                    val url = "https://tally.so/r/mO2pBp"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }
+            ) {
+                Text(
+                    text = stringResource(R.string.submit_form),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
-        ) {
+                .padding(top = 20.dp),
+            ) {
             Text(
                 text = stringResource(R.string.footer_text),
                 fontSize = 12.sp,
@@ -242,25 +287,10 @@ fun TopicsScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            Text(
-                text = "GitHub",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        val url = "https://www.github.com/skippydream/Strati"
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
-                    }
-                    .padding(top = 4.dp)
-            )
         }
+
     }
-}
+    }
 
 
 
@@ -630,7 +660,7 @@ fun DonationLinkButton() {
             ) {
                 Text(
                     text = if (expanded) stringResource(R.string.donate_hide) else stringResource(R.string.donate_title),
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                     modifier = Modifier.weight(1f)
