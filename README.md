@@ -4,8 +4,7 @@
 
 # Strati
   
-Strati is an Android app written in **Jetpack Compose** that will pose various philosophical and social questions that are not easy to answer.  
-The difficulty increases layer by layer.
+**Strati** (which is the Italian for "Layers") is an Android app built with Jetpack Compose that presents thought-provoking philosophical and social questions. The questions become progressively more challenging, guiding users through increasingly deeper layers of reflection and conversation.
 
 ## Main Features
 
