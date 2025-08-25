@@ -684,7 +684,7 @@ fun LanguageSwitcher(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
+            .padding(top = 24.dp, bottom = 12.dp),
         horizontalArrangement = Arrangement.End
     ) {
         val selectedColor = MaterialTheme.colorScheme.primary
