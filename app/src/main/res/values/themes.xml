@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Strati" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- DayNight evita il flash bianco all'avvio in tema scuro; AppCompat serve al
+         backport della lingua per-app sotto Android 13. -->
+    <style name="Theme.Strati" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">?android:attr/colorBackground</item>
+    </style>
 </resources>

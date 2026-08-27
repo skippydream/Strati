@@ -18,6 +18,32 @@
   <img src="https://github.com/skippydream/Strati/blob/main/Images/2.png?raw=true" width="350" />
 </p>
 
-## How to use
+## Build
 
 This repository is ready to be imported into Android Studio.
+
+| | |
+|---|---|
+| `minSdk` | 24 (Android 7.0) |
+| `compileSdk` / `targetSdk` | 36 |
+| JDK | 17-21 (the one bundled with Android Studio works out of the box) |
+| Gradle | 8.14.5 via the wrapper |
+
+```bash
+./gradlew assembleRelease
+```
+
+Release builds are shrunk with R8 and resource shrinking.
+
+## Project layout
+
+```
+app/src/main/java/com/skippydream/strati/
+  data/      topic catalogue, question loading, language handling
+  ui/        navigation graph, screens, reusable components, theme
+app/src/main/res/
+  raw/       questions in Italian
+  raw-en/    questions in English (picked automatically by locale)
+```
+
+Adding a question means editing the matching file under `res/raw` and `res/raw-en`: one question per line.
