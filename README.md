@@ -47,3 +47,10 @@ app/src/main/res/
 ```
 
 Adding a question means editing the matching file under `res/raw` and `res/raw-en`: one question per line.
+
+## Credits
+
+The title is set in [Fraunces](https://fonts.google.com/specimen/Fraunces), used under the
+SIL Open Font License — see [licenses/Fraunces-OFL.txt](licenses/Fraunces-OFL.txt). The bundled
+`app/src/main/res/font/fraunces.ttf` is a static instance (weight 600, optical size 72) subset to
+the Latin characters the app needs.

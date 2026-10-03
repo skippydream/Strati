@@ -8,6 +8,7 @@
     <!-- Istruzioni -->
     <string name="instructions_title">Istruzioni</string>
     <string name="instructions_how">Scegli un topic, poi uno strato. Si gioca in due o in un gruppo piccolo, passandosi il telefono. Rispondi in modo onesto: non ci sono risposte giuste o sbagliate, solo la tua verità.</string>
+    <string name="instructions_deck">Ogni strato è un mazzo: le carte che peschi restano fuori, anche se chiudi l\'app. Il pulsante in alto rimescola tutto e le rimette in gioco.</string>
     <string name="instructions_layers" tools:ignore="PluralsCandidate">Più si sale di strato, più le domande si avvicinano: a un certo punto smettono di parlare solo di te e iniziano a parlare di chi hai davanti. Quando una domanda dice «me», intende chi l\'ha appena letta. E se una domanda è troppo, passala: anche passare è una risposta. Ne hai %1$d per strato.</string>
     <string name="instructions_timer" tools:ignore="PluralsCandidate">Il timer di %1$d secondi non è un limite di tempo, ma un tempo di riflessione minimo: devi aspettare che il conto alla rovescia si azzeri prima di passare alla domanda successiva.</string>
 
@@ -18,6 +19,13 @@
 
     <!-- Donazioni -->
     <string name="donate_link">Offrimi un caffè</string>
+
+    <!-- Reimpostazione -->
+    <string name="reset_cards">Reimposta le carte</string>
+    <string name="reset_dialog_title">Reimpostare le carte?</string>
+    <string name="reset_dialog_text">Tutti i mazzi tornano interi e le carte già pescate rientrano in gioco. Utile quando cambi la persona con cui giochi.</string>
+    <string name="reset_confirm">Sì</string>
+    <string name="reset_cancel">Annulla</string>
 
     <!-- Errori -->
     <string name="error_invalid_topic">Errore: Topic non valido</string>

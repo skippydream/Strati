@@ -2,9 +2,13 @@ package com.skippydream.strati.ui.screens
 
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +50,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -56,10 +62,12 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.skippydream.strati.R
+import com.skippydream.strati.data.DeckState
 import com.skippydream.strati.data.ProgressStore
 import com.skippydream.strati.data.QuestionsRepository
 import com.skippydream.strati.data.Topics
 import com.skippydream.strati.ui.components.ErrorState
+import com.skippydream.strati.ui.components.StratiMark
 import kotlin.random.Random
 
 /** Tempo minimo di riflessione fra una domanda e la successiva. */
@@ -70,6 +78,9 @@ internal const val MAX_SKIPS = 3
 
 private const val REFLECTION_MILLIS = REFLECTION_SECONDS * 1_000L
 private const val NOT_STARTED = -1
+
+// Spazio lasciato sopra la carta in mano perche' la pila ci sbuchi dentro.
+private const val DECK_TOP = 34
 
 /**
  * Seme dello shuffle e indice bastano a ricostruire l'ordine esatto delle domande, e la
@@ -106,10 +117,13 @@ fun QuestionScreen(
         questions = QuestionsRepository.load(resources, layer.questionsRes)
     }
 
-    var seed by rememberSaveable { mutableLongStateOf(Random.nextLong()) }
-    var index by rememberSaveable { mutableIntStateOf(NOT_STARTED) }
+    // Il mazzo riprende da dove lo avevi lasciato: le carte pescate restano fuori
+    // finche' non rimescoli dalla home o non rigiochi lo strato.
+    val saved = remember(topicId, layerId) { ProgressStore.deck(topic.id, layer.id) }
+    var seed by rememberSaveable { mutableLongStateOf(saved?.seed ?: Random.nextLong()) }
+    var index by rememberSaveable { mutableIntStateOf(saved?.drawn ?: NOT_STARTED) }
+    var skipsLeft by rememberSaveable { mutableIntStateOf(saved?.skipsLeft ?: MAX_SKIPS) }
     var deadline by rememberSaveable { mutableLongStateOf(0L) }
-    var skipsLeft by rememberSaveable { mutableIntStateOf(MAX_SKIPS) }
 
     val order = remember(questions, seed) {
         questions?.indices?.shuffled(Random(seed)).orEmpty()
@@ -149,6 +163,16 @@ fun QuestionScreen(
         if (finished) ProgressStore.markCompleted(topic.id, layer.id)
     }
 
+    LaunchedEffect(seed, index, skipsLeft, order.size) {
+        if (index != NOT_STARTED && order.isNotEmpty()) {
+            ProgressStore.saveDeck(
+                topicId = topic.id,
+                layerId = layer.id,
+                state = DeckState(seed, index, skipsLeft, order.size),
+            )
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -165,34 +189,34 @@ fun QuestionScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Card(
+        Deck(
+            depth = deckDepth(order.size, index, finished),
+            faceUp = started,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                when {
-                    questions == null -> CircularProgressIndicator()
-                    order.isEmpty() -> QuestionText(stringResource(R.string.error_no_questions))
-                    finished -> LayerCompleted()
-                    else -> AnimatedContent(
-                        targetState = if (started) questions?.getOrNull(order[index]).orEmpty() else "",
-                        transitionSpec = {
-                            fadeIn(tween(durationMillis = 240)) togetherWith
-                                fadeOut(tween(durationMillis = 160))
-                        },
-                        label = "question",
-                    ) { text ->
-                        QuestionText(
-                            text = text.ifEmpty { stringResource(R.string.question_prompt_not_started) },
-                        )
+            when {
+                questions == null -> CircularProgressIndicator()
+                order.isEmpty() -> QuestionText(stringResource(R.string.error_no_questions))
+                else -> AnimatedContent(
+                    targetState = index,
+                    transitionSpec = {
+                        // La carta nuova arriva dall'alto della pila.
+                        (
+                            fadeIn(tween(260)) +
+                                slideInVertically(tween(260)) { -it / 14 } +
+                                scaleIn(tween(260), initialScale = 0.97f)
+                            ) togetherWith (
+                            fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 1.02f)
+                            )
+                    },
+                    label = "card",
+                ) { drawn ->
+                    when {
+                        drawn == NOT_STARTED -> CardBack()
+                        drawn >= order.size -> LayerCompleted()
+                        else -> QuestionText(questions?.getOrNull(order[drawn]).orEmpty())
                     }
                 }
             }
@@ -282,6 +306,114 @@ private fun SessionHeader(
                 modifier = Modifier.semantics { contentDescription = description },
             )
         }
+    }
+}
+
+/** Quante carte restano visibili dietro a quella in mano: la pila cala man mano. */
+private fun deckDepth(total: Int, index: Int, finished: Boolean): Int {
+    if (total == 0 || finished) return 0
+    val remaining = total - index.coerceAtLeast(0)
+    if (remaining <= 1) return 0
+    val fraction = remaining.toFloat() / total
+    return when {
+        fraction > 0.66f -> 3
+        fraction > 0.33f -> 2
+        else -> 1
+    }
+}
+
+/**
+ * La carta in mano, con la pila delle rimanenti che sbuca da sopra.
+ *
+ * Le carte dietro sono coperte e sfalsate verso l'alto; quella davanti e' sempre alla
+ * stessa altezza, cosi' il testo non si sposta quando il mazzo si assottiglia.
+ */
+@Composable
+private fun Deck(
+    depth: Int,
+    faceUp: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val faceColor by animateColorAsState(
+        targetValue = if (faceUp) {
+            MaterialTheme.colorScheme.surfaceContainerLowest
+        } else {
+            MaterialTheme.colorScheme.primaryContainer
+        },
+        animationSpec = tween(durationMillis = 280),
+        label = "faceColor",
+    )
+
+    val backColor = MaterialTheme.colorScheme.primaryContainer
+    val background = MaterialTheme.colorScheme.background
+
+    Box(modifier = modifier) {
+        // Ogni carta dietro e' piu' stretta, piu' alta, inclinata di poco e piu' vicina
+        // al colore dello sfondo: e' la distanza a farle sembrare dietro, non un bordo.
+        for (behind in depth downTo 1) {
+            val lift = (behind * 7).dp
+            val tilt = if (behind % 2 == 0) 0.9f + behind * 0.8f else -(0.9f + behind * 0.8f)
+
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = DECK_TOP.dp)
+                    .graphicsLayer {
+                        translationY = -lift.toPx()
+                        rotationZ = tilt
+                        scaleX = 1f - behind * 0.035f
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = lerp(backColor, background, behind * 0.17f),
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = (depth - behind + 3).dp,
+                ),
+            ) {}
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = DECK_TOP.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = faceColor,
+                contentColor = if (faceUp) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                },
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                content()
+            }
+        }
+    }
+}
+
+/** Il dorso: quello che vedi prima di pescare. */
+@Composable
+private fun CardBack(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        StratiMark(modifier = Modifier.size(56.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = stringResource(R.string.question_prompt_not_started),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

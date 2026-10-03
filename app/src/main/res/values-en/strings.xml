@@ -8,6 +8,7 @@
     <!-- Instructions -->
     <string name="instructions_title">Instructions</string>
     <string name="instructions_how">Choose a topic, then a layer. Play as a pair or in a small group, passing the phone around. Answer honestly: there are no right or wrong answers, just your truth.</string>
+    <string name="instructions_deck">Each layer is a deck: the cards you draw stay out, even if you close the app. The button at the top reshuffles everything and puts them back in play.</string>
     <string name="instructions_layers" tools:ignore="PluralsCandidate">The deeper the layer, the closer the questions get: at some point they stop being about you alone and start being about the person in front of you. When a question says “me”, it means whoever just read it out. And if a question is too much, pass it: passing counts as an answer too. You get %1$d passes per layer.</string>
     <string name="instructions_timer" tools:ignore="PluralsCandidate">The %1$d-second timer is not a time limit, but a minimum reflection time: you have to wait for the countdown to hit zero before moving on to the next question.</string>
 
@@ -18,6 +19,13 @@
 
     <!-- Donations -->
     <string name="donate_link">Buy me a coffee</string>
+
+    <!-- Reset -->
+    <string name="reset_cards">Reset the cards</string>
+    <string name="reset_dialog_title">Reset the cards?</string>
+    <string name="reset_dialog_text">Every deck goes back to full and the cards you already drew return to play. Handy when you switch the person you are playing with.</string>
+    <string name="reset_confirm">Yes</string>
+    <string name="reset_cancel">Cancel</string>
 
     <!-- Errors -->
     <string name="error_invalid_topic">Error: Invalid Topic</string>

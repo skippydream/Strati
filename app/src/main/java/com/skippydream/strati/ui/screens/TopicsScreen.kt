@@ -24,7 +24,17 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.skippydream.strati.data.ProgressStore
+import com.skippydream.strati.ui.components.StratiMark
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -49,6 +59,17 @@ fun TopicsScreen(
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
+    var askingReset by rememberSaveable { mutableStateOf(false) }
+
+    if (askingReset) {
+        ResetDialog(
+            onConfirm = {
+                ProgressStore.reset()
+                askingReset = false
+            },
+            onDismiss = { askingReset = false },
+        )
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -56,7 +77,7 @@ fun TopicsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        item(key = "language") { LanguageSwitcher() }
+        item(key = "header") { AppHeader(onReset = { askingReset = true }) }
 
         item(key = "instructions") { InstructionsCard() }
 
@@ -86,6 +107,59 @@ fun TopicsScreen(
 }
 
 @Composable
+private fun AppHeader(
+    onReset: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        StratiMark(modifier = Modifier.size(34.dp))
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.displaySmall,
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        FilledTonalIconButton(
+            onClick = onReset,
+            modifier = Modifier.size(36.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = stringResource(R.string.reset_cards),
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        LanguageSwitcher()
+    }
+}
+
+@Composable
+private fun ResetDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.reset_dialog_title)) },
+        text = { Text(text = stringResource(R.string.reset_dialog_text)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.reset_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.reset_cancel))
+            }
+        },
+    )
+}
+
+@Composable
 private fun InstructionsCard(modifier: Modifier = Modifier) {
     ExpandableCard(
         title = stringResource(R.string.instructions_title),
@@ -93,6 +167,11 @@ private fun InstructionsCard(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResource(R.string.instructions_how),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.instructions_deck),
             style = MaterialTheme.typography.bodyMedium,
         )
         Spacer(modifier = Modifier.height(8.dp))

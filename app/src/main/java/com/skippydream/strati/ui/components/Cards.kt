@@ -6,10 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,18 +49,19 @@ fun TopicCard(
 
     ElevatedCard(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            // heightIn e non height: con font di sistema grandi il testo non si taglia.
-            .heightIn(min = 104.dp),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
     ) {
+        // L'altezza minima sta qui e non sulla Card: dentro una lista scrollabile
+        // l'altezza massima e' infinita, quindi un fillMaxSize non riempirebbe nulla
+        // e il contenuto resterebbe appoggiato in alto.
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 104.dp)
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -71,15 +71,17 @@ fun TopicCard(
                 modifier = Modifier.size(36.dp),
             )
             Spacer(modifier = Modifier.width(20.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = name, style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.height(8.dp))
-                LayerDots(
-                    topicId = topic.id,
-                    layers = topic.layers,
-                    modifier = Modifier.semantics { contentDescription = progressDescription },
-                )
-            }
+            Text(
+                text = name,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            LayerDots(
+                topicId = topic.id,
+                layers = topic.layers,
+                modifier = Modifier.semantics { contentDescription = progressDescription },
+            )
         }
     }
 }
@@ -116,21 +118,21 @@ fun LayerCard(
     modifier: Modifier = Modifier,
 ) {
     val completed = ProgressStore.isCompleted(topicId, layer.id)
+    val deck = ProgressStore.deck(topicId, layer.id)
 
     Card(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 100.dp),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         ),
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 100.dp)
                     .padding(horizontal = 40.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -147,14 +149,22 @@ fun LayerCard(
                 )
             }
 
-            if (completed) {
-                Icon(
+            when {
+                completed -> Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = stringResource(R.string.layer_completed_title),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(12.dp)
                         .size(20.dp),
+                )
+
+                deck != null && deck.drawn > 0 -> Text(
+                    text = stringResource(R.string.question_counter, deck.drawn, deck.total),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
                 )
             }
         }
