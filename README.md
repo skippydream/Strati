@@ -14,7 +14,6 @@
 ## Screenshots
 <p align="center">
   <img src="https://github.com/skippydream/Strati/blob/main/Images/1.png?raw=true" width="350"/>
-  <img src="https://github.com/skippydream/Strati/blob/main/Images/3.png?raw=true" width="350"/>
   <img src="https://github.com/skippydream/Strati/blob/main/Images/2.png?raw=true" width="350" />
 </p>
 
